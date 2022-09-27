@@ -1,3 +1,7 @@
+install.py
+data/balls/
+data/colors/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
