@@ -32,12 +32,12 @@ class Classifier():
         self.test_loader = None
 
     def set_train_test_loaders(self):
-        train_loader, test_laoder = load_images(self.batch_size)
+        train_loader, test_laoder = load_ball_images(self.batch_size)
         self.train_loader = train_loader
         self.test_loader = test_laoder
 
     def train(self, num_epochs):
-        for epoch in range(1, num_epochs+1):
+        for epoch in range(1, num_epochs + 1):
             for i, (images, labels) in enumerate(self.train_loader, 0):
 
                 images = Variable(images.to(self.device))
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     classifier = Classifier()
     classifier.set_train_test_loaders()
 
-    classifier.train(5)
+    classifier.train(50)
     print('Finished Training')
 
     save_model(classifier.network)

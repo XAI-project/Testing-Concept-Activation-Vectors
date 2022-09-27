@@ -1,8 +1,13 @@
+from inspect import stack
 from torchvision.datasets import CIFAR10
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 from CONSTS import *
 import torch
+import torchvision
+from PIL import Image
+import os
+import random
 
 
 def save_model(model, path=MODEL_PATH):
@@ -45,3 +50,54 @@ def load_images(batch_size):
     print("The number of batches per epoch is: ", len(train_loader))
 
     return train_loader, test_loader
+
+
+def load_ball_images(batch_size):
+    classes = ['basketball', 'baseball', 'bowling ball', 'football', 'eyeballs',
+               'marble', 'tennis ball', 'golf ball', 'volley ball', 'beachballs']
+    image_and_label_training = []
+    image_and_label_testing = []
+    for i, imagetype in enumerate(classes):
+        directory_train = os.fsencode('archive/train/' + imagetype)
+        for file in os.listdir(directory_train):
+            filename = os.fsdecode(file)
+            img = Image.open('archive/train/' + imagetype + '/' + filename)
+            resize = torchvision.transforms.Resize([32, 32])
+            img = resize(img)
+            to_tensor = torchvision.transforms.ToTensor()
+            tensor = to_tensor(img)
+            image_and_label_training.append((tensor, torch.tensor(i)))
+        directory_test = os.fsencode('archive/test/' + imagetype)
+        for file in os.listdir(directory_test):
+            filename = os.fsdecode(file)
+            img = Image.open('archive/test/' + imagetype + '/' + filename)
+            resize = torchvision.transforms.Resize([32, 32])
+            img = resize(img)
+            to_tensor = torchvision.transforms.ToTensor()
+            tensor = to_tensor(img)
+            image_and_label_testing.append((tensor, torch.tensor(i)))
+    random.shuffle(image_and_label_training)
+    random.shuffle(image_and_label_testing)
+    train_data = generate_batches_from_list(
+        batch_size, image_and_label_training)
+    test_data = generate_batches_from_list(batch_size, image_and_label_testing)
+    return train_data, test_data
+
+
+def generate_batches_from_list(batch_size, tensorlist):
+    data = []
+    batches_input = [pair[0] for pair in tensorlist]
+    batches_label = [pair[1] for pair in tensorlist]
+    for i in range(1, len(batches_input) // 10):
+        try:
+            inputs = batches_input[batch_size * (i - 1):batch_size * i]
+            labels = batches_label[batch_size * (i - 1):batch_size * i]
+            stacked_inputs = torch.stack(inputs, dim=0)  # (10, 3, 32, 32)
+            stacked_labels = torch.stack(labels, dim=0)  # (10)
+            data.append((stacked_inputs, stacked_labels))
+        except:
+            continue
+    return data
+
+
+load_ball_images(10)
