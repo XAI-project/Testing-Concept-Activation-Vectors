@@ -1,9 +1,6 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 from torch.optim import Adam
 
-import torchvision
 import torch.nn as nn
 from torch.autograd import Variable
 
@@ -20,13 +17,9 @@ class Classifier():
         self.network = Network().to(self.device)
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = Adam(self.network.parameters(),
-                              lr=0.001, weight_decay=0.0001)
+                              lr=0.00003, weight_decay=0.005)
 
         self.batch_size = 10
-        self.number_of_labels = 10
-
-        self.classes = ('plane', 'car', 'bird', 'cat', 'deer',
-                        'dog', 'frog', 'horse', 'ship', 'truck')
 
         self.train_loader = None
         self.test_loader = None
@@ -38,7 +31,7 @@ class Classifier():
 
     def train(self, num_epochs):
         for epoch in range(1, num_epochs + 1):
-            for i, (images, labels) in enumerate(self.train_loader, 0):
+            for i, (images, labels) in enumerate(self.train_loader):
 
                 images = Variable(images.to(self.device))
                 labels = Variable(labels.to(self.device))
@@ -78,7 +71,7 @@ if __name__ == "__main__":
     classifier = Classifier()
     classifier.set_train_test_loaders()
 
-    classifier.train(50)
+    classifier.train(15)
     print('Finished Training')
 
     save_model(classifier.network)
