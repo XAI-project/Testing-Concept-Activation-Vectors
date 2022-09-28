@@ -12,4 +12,6 @@ BASKETBALL_VALID_PATH = BALLS_VALID_PATH + "/basketball"
 COLORS_PATH = DATA_PATH + "/colors"
 ORANGE_PATH = COLORS_PATH + "/orange"
 
+RANDOM_IMAGES_PATH = DATA_PATH + "/random"
+
 MODEL_PATH = DATA_PATH + "/model.pt"

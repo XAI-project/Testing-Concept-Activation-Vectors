@@ -5,19 +5,26 @@ from PIL import Image
 import os
 import random
 
+from Network import Network
+
 
 def save_model(model, path=MODEL_PATH):
     """Save the model to a specified file"""
-    torch.save(model.state_dict(), path)
+    torch.save(model, path)
 
 
-def create_image_label_data(path, image_type, label):
-    image_type_path = path + "/" + image_type
-    directory_test = os.fsencode(image_type_path)
+def load_model(path=MODEL_PATH):
+    model = torch.load(path)
+    model.eval()
+    return model
+
+
+def create_image_label_data(path, label=0):
+    directory_path = os.fsencode(path)
     image_label_data = []
-    for file in os.listdir(directory_test):
+    for file in os.listdir(directory_path):
         filename = os.fsdecode(file)
-        img = Image.open(image_type_path + '/' + filename)
+        img = Image.open(path + '/' + filename)
         resize = torchvision.transforms.Resize([32, 32])
         img = resize(img)
         to_tensor = torchvision.transforms.ToTensor()
@@ -33,11 +40,11 @@ def load_ball_images(batch_size):
     image_and_label_testing = []
     for i, image_type in enumerate(classes):
         image_and_label_training += create_image_label_data(
-            BALLS_TRAIN_PATH, image_type, i)
+            BALLS_TRAIN_PATH + "/" + image_type, i)
         image_and_label_testing += create_image_label_data(
-            BALLS_TEST_PATH, image_type, i)
+            BALLS_TEST_PATH + "/" + image_type, i)
         image_and_label_testing += create_image_label_data(
-            BALLS_VALID_PATH, image_type, i)  # We don't validate atm, so adding for more accurate accuracy
+            BALLS_VALID_PATH + "/" + image_type, i)  # We don't validate atm, so adding for more accurate accuracy
 
     random.shuffle(image_and_label_training)
     random.shuffle(image_and_label_testing)
@@ -47,11 +54,18 @@ def load_ball_images(batch_size):
     return train_data, test_data
 
 
+def load_images(path):
+    images_and_labels = create_image_label_data(path)
+    random.shuffle(images_and_labels)
+    data = generate_batches_from_list(1, images_and_labels)
+    return data
+
+
 def generate_batches_from_list(batch_size, tensor_list):
     data = []
     batches_input = [pair[0] for pair in tensor_list]
     batches_label = [pair[1] for pair in tensor_list]
-    for i in range(1, len(batches_input) // batch_size):
+    for i in range(1, (len(batches_input) // batch_size) + 1):
         try:
             inputs = batches_input[batch_size * (i - 1):batch_size * i]
             labels = batches_label[batch_size * (i - 1):batch_size * i]
@@ -61,6 +75,3 @@ def generate_batches_from_list(batch_size, tensor_list):
         except:
             continue
     return data
-
-
-load_ball_images(10)
