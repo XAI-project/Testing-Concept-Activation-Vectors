@@ -1,6 +1,7 @@
 install.py
 data/balls/
 data/colors/
+data/random/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
