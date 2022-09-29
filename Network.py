@@ -84,3 +84,17 @@ class Network(nn.Module):
         # image dim: 10 (number of possible labels)
 
         return output
+
+    def get_layer_activations(self, layer):
+        if layer == 1:
+            return self.output1
+        if layer == 2:
+            return self.output2
+        if layer == 3:
+            return self.output3
+        if layer == 4:
+            return self.output4
+        if layer == 5:
+            return self.output5
+        if layer == 6:
+            return self.output6

@@ -19,16 +19,21 @@ def load_model(path=MODEL_PATH):
     return model
 
 
+def get_and_rescale_img(file, path):
+    filename = os.fsdecode(file)
+    img = Image.open(path + '/' + filename)
+    resize = torchvision.transforms.Resize([32, 32])
+    img = resize(img)
+    to_tensor = torchvision.transforms.ToTensor()
+    tensor = to_tensor(img)
+    return tensor
+
+
 def create_image_label_data(path, label=0):
     directory_path = os.fsencode(path)
     image_label_data = []
     for file in os.listdir(directory_path):
-        filename = os.fsdecode(file)
-        img = Image.open(path + '/' + filename)
-        resize = torchvision.transforms.Resize([32, 32])
-        img = resize(img)
-        to_tensor = torchvision.transforms.ToTensor()
-        tensor = to_tensor(img)
+        tensor = get_and_rescale_img(file, path)
         image_label_data.append((tensor, torch.tensor(label)))
     return image_label_data
 

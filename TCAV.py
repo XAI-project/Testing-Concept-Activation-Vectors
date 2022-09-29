@@ -12,21 +12,27 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def get_layer_one_activations(model, images):
+def get_layer_activations(model, images, layer):
     activations = []
-    for (images, _) in images:
-        model.forward_and_save_layers(images)
-        activations.append(torch.flatten(model.output6).tolist())
+
+    for layer in range(1, num_of_layers+1):
+        img_activations = []
+        for (image, _) in images:
+            model.forward_and_save_layers(image)
+            img_activations.append(torch.flatten(
+                model.get_layer_activations(layer)).tolist())
+
+        activations.append(img_activations)
     return activations
 
 
-def prepare_concept_activations(model):
+def prepare_concept_activations(model, layer):
 
     orange_images = load_images(ORANGE_PATH)
-    orange_activations = get_layer_one_activations(model, orange_images)
+    orange_activations = get_layer_activations(model, orange_images, layer)
 
     random_images = load_images(RANDOM_IMAGES_PATH)
-    random_activations = get_layer_one_activations(model, random_images)
+    random_activations = get_layer_activations(model, random_images, layer)
 
     return orange_activations, random_activations
 
@@ -44,58 +50,72 @@ def create_svm_classifier(orange_activations, random_activations):
 
 if __name__ == "__main__":
 
-    layer = 6
+    TCAV_layer_averages = []
+    num_of_layers = 6
 
     model = load_model()
-    orange_activations, random_activations = prepare_concept_activations(model)
 
-    num_of_images = len(orange_activations)
+    all_orange_activations = []
+    all_random_activations = []
 
-    num_of_dimensions = len(orange_activations[0])
+    orange_activations, random_activations = prepare_concept_activations(
+        model, num_of_layers)  # dim: num of layers x num of images
 
-    v_l_C_list = []
-    for i in tqdm(range(0, 100)):
-        clf = create_svm_classifier(orange_activations, sample(
-            random_activations, num_of_images))
-        v_l_C_list.append(clf.coef_[0])
+    num_of_images = len(orange_activations[0])  # TODO
 
-    for v_l_C in tqdm(v_l_C_list):
-        directory_path = os.fsencode(BASKETBALL_TRAIN_PATH)
+    num_of_dimensions = len(orange_activations[0][0])  # TODO
 
-        pos_s_count = 0
-        neg_s_count = 0
+    for layer in tqdm(range(1, num_of_layers + 1)):
 
-        for file in os.listdir(directory_path):
-            filename = os.fsdecode(file)
-            img = Image.open(BASKETBALL_TRAIN_PATH + '/' + filename)
-            resize = torchvision.transforms.Resize([32, 32])
-            img = resize(img)
-            to_tensor = torchvision.transforms.ToTensor()
-            tensor = to_tensor(img)
-            image_label_data = [((tensor, torch.tensor(0)))]
-            batch = generate_batches_from_list(
-                1, image_label_data)
+        v_l_C_list = []
 
-            image = batch[0][0]
+        layer_orange_activations = orange_activations[layer-1]
+        layer_random_activations = random_activations[layer-1]
 
-            model.forward_and_save_layers(image)
-            layer_activations = model.output6
+        for i in range(0, 50):
+            clf = create_svm_classifier(layer_orange_activations, sample(
+                layer_random_activations, num_of_images))
+            v_l_C_list.append(clf.coef_[0])
 
-            v_unflattened = torch.tensor(
-                v_l_C.reshape(layer_activations.shape).astype(np.float32))
+        TCAV_scores_layer = []
 
-            v_delta = 0.001*v_unflattened
+        for v_l_C in v_l_C_list:
+            directory_path = os.fsencode(BASKETBALL_TRAIN_PATH)
 
-            changed_layer_activations = layer_activations + v_delta
+            pos_s_count = 0
+            neg_s_count = 0
 
-            sensitivity = model(
-                changed_layer_activations, layer=layer)[0][0] - model(layer_activations, layer=layer)[0][0]
+            for file in os.listdir(directory_path):
+                tensor = get_and_rescale_img(file, BASKETBALL_TRAIN_PATH)
+                image_label_data = [((tensor, torch.tensor(0)))]
+                batch = generate_batches_from_list(
+                    1, image_label_data)
 
-            if sensitivity > 0:
-                pos_s_count += 1
-            else:
-                neg_s_count += 1
+                image = batch[0][0]
 
-        TCAV_Q = pos_s_count / (pos_s_count + neg_s_count)
+                model.forward_and_save_layers(image)
+                layer_activations = model.get_layer_activations(layer)
 
-        print(TCAV_Q)
+                v_unflattened = torch.tensor(
+                    v_l_C.reshape(layer_activations.shape).astype(np.float32))
+
+                v_delta = 0.001*v_unflattened
+
+                changed_layer_activations = layer_activations + v_delta
+
+                sensitivity = model(
+                    changed_layer_activations, layer=layer)[0][0] - model(layer_activations, layer=layer)[0][0]
+
+                if sensitivity > 0:
+                    pos_s_count += 1
+                else:
+                    neg_s_count += 1
+
+            TCAV_score = pos_s_count / (pos_s_count + neg_s_count)
+
+            TCAV_scores_layer.append(TCAV_score)
+
+        TCAV_layer_averages.append(
+            sum(TCAV_scores_layer) / len(TCAV_scores_layer))
+
+    print(TCAV_layer_averages)
