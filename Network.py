@@ -28,23 +28,55 @@ class Network(nn.Module):
         self.output5 = None
         self.output6 = None
 
-    def forward(self, input):
+    def forward(self, input, layer=0):
         # image dim: 3 x 32 x 32
+        output = input
+        if layer <= 0:
+            output = F.relu(self.bn1(self.conv1(output)))
+        # image dim: 12 x 30 x 30
+        if layer <= 1:
+            output = F.relu(self.bn2(self.conv2(output)))
+        # image dim: 12 x 28 x 28
+        if layer <= 2:
+            output = self.pool(output)
+        # image dim: 12 x 14 x 14
+        if layer <= 3:
+            output = F.relu(self.bn4(self.conv4(output)))
+        # image dim: 24 x 12 x 12
+        if layer <= 4:
+            output = F.relu(self.bn5(self.conv5(output)))
+        # image dim: 48 x 10 x 10
+        if layer <= 5:
+            output = output.view(-1, 48*10*10)
+        # image dim: 4800
+        output = self.fc1(output)
+        # image dim: 10 (number of possible labels)
+
+        return output
+
+    def forward_and_save_layers(self, input):
+        # image dim: 3 x 32 x 32
+
         output1 = F.relu(self.bn1(self.conv1(input)))
         self.output1 = output1
         # image dim: 12 x 30 x 30
+
         output2 = F.relu(self.bn2(self.conv2(output1)))
         self.output2 = output2
         # image dim: 12 x 28 x 28
+
         output3 = self.pool(output2)
         self.output3 = output3
         # image dim: 12 x 14 x 14
+
         output4 = F.relu(self.bn4(self.conv4(output3)))
         self.output4 = output4
         # image dim: 24 x 12 x 12
+
         output5 = F.relu(self.bn5(self.conv5(output4)))
         self.output5 = output5
         # image dim: 48 x 10 x 10
+
         output6 = output5.view(-1, 48*10*10)
         self.output6 = output6
         # image dim: 4800
