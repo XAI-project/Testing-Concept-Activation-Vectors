@@ -2,7 +2,8 @@ install.py
 data/balls/
 data/colors/
 data/random/
-
+data/circles/
+data/circles_filled/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
