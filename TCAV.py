@@ -1,46 +1,57 @@
-
-from CONSTS import *
-from helpers import *
 from random import sample
 from sklearn import svm
 import numpy as np
 import torch
 from tqdm import tqdm
 
+from CONSTS import *
+from helpers import *
 
 import warnings
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")  # TODO: perhaps not the best solution
 
 
-def get_layer_activations(model, images, layer):
+def get_all_layer_activations(model, images, num_of_layers):
+    """
+    Get activations in each layer for all images
+    """
     activations = []
 
     for layer in range(1, num_of_layers+1):
         img_activations = []
         for (image, _) in images:
+            # TODO: not necessary to run model.forward_and_save_layers once for each layer. Should be done once for each image.
             model.forward_and_save_layers(image)
             img_activations.append(torch.flatten(
                 model.get_layer_activations(layer)).tolist())
 
         activations.append(img_activations)
-    return activations
+    return activations  # Shape: (# of layers, # of images)
 
 
-def prepare_concept_activations(model, layer):
+def prepare_concept_activations(model, num_of_layers, concept_images_path):
+    """
+    Get activations for images belonging to a concept and random images.
+    """
 
-    orange_images = load_images(ORANGE_PATH)
-    orange_activations = get_layer_activations(model, orange_images, layer)
+    concept_images = load_images(concept_images_path)
+    concept_images_activations = get_all_layer_activations(
+        model, concept_images, num_of_layers)
 
     random_images = load_images(RANDOM_IMAGES_PATH)
-    random_activations = get_layer_activations(model, random_images, layer)
+    random_activations = get_all_layer_activations(
+        model, random_images, num_of_layers)
 
-    return orange_activations, random_activations
+    return concept_images_activations, random_activations
 
 
-def create_svm_classifier(orange_activations, random_activations):
-    X = orange_activations + random_activations
+def create_svm_classifier(concept_images_activations, random_activations):
+    """
+    Get SVM classifier that classifies a set of concept images and a set of random images.
+    """
+    X = concept_images_activations + random_activations
 
-    y = list(list(np.ones(len(orange_activations))) +
+    y = list(list(np.ones(len(concept_images_activations))) +
              list(np.zeros(len(random_activations))))
     clf = svm.LinearSVC()
 
@@ -48,38 +59,39 @@ def create_svm_classifier(orange_activations, random_activations):
     return clf
 
 
-if __name__ == "__main__":
+def get_TCAV_layer_scores(model, num_of_layers, concept_images_path, num_of_concept_vectors=50):
+    """
+    For each layer, create num_of_concept_vectors concept vectors and test all basketball images on each concept vector. 
+    Get the ratio of times changing the basketball image activations with (basketball image activations + (tiny constant * concept vector)) 
+    makes the model more sure that the image belongs to the basketball class.
+    Average the ratio / TCAV score for all concept vectors and return a list of mean TCAV scores for each layer.
+    """
 
     TCAV_layer_averages = []
-    num_of_layers = 6
 
-    model = load_model()
+    concept_images_activations, random_activations = prepare_concept_activations(
+        model, num_of_layers, concept_images_path)  # dim: num of layers x num of images ...
 
-    all_orange_activations = []
-    all_random_activations = []
-
-    orange_activations, random_activations = prepare_concept_activations(
-        model, num_of_layers)  # dim: num of layers x num of images
-
-    num_of_images = len(orange_activations[0])  # TODO
-
-    num_of_dimensions = len(orange_activations[0][0])  # TODO
+    num_of_images = len(concept_images_activations[0])
 
     for layer in tqdm(range(1, num_of_layers + 1)):
 
-        v_l_C_list = []
+        concept_vector_list = []
 
-        layer_orange_activations = orange_activations[layer-1]
+        layer_concept_images_activations = concept_images_activations[layer-1]
         layer_random_activations = random_activations[layer-1]
 
-        for i in range(0, 50):
-            clf = create_svm_classifier(layer_orange_activations, sample(
+        for i in range(0, num_of_concept_vectors):
+            clf = create_svm_classifier(layer_concept_images_activations, sample(
                 layer_random_activations, num_of_images))
-            v_l_C_list.append(clf.coef_[0])
+            # Extract and append the concept vector to the list
+            concept_vector_list.append(clf.coef_[0])
 
         TCAV_scores_layer = []
 
-        for v_l_C in v_l_C_list:
+        for concept_vector in concept_vector_list:
+            # All concept vectors are created the same way but differ due to inherent randomness by having many dimensions.
+
             directory_path = os.fsencode(BASKETBALL_TRAIN_PATH)
 
             pos_s_count = 0
@@ -89,15 +101,16 @@ if __name__ == "__main__":
                 tensor = get_and_rescale_img(file, BASKETBALL_TRAIN_PATH)
                 image_label_data = [((tensor, torch.tensor(0)))]
                 batch = generate_batches_from_list(
-                    1, image_label_data)
+                    1, image_label_data)  # To have the correct dimensions
 
                 image = batch[0][0]
 
                 model.forward_and_save_layers(image)
-                layer_activations = model.get_layer_activations(layer)
+                layer_activations = model.get_layer_activations(
+                    layer)  # TODO: same as in get_all_layer_activations
 
                 v_unflattened = torch.tensor(
-                    v_l_C.reshape(layer_activations.shape).astype(np.float32))
+                    concept_vector.reshape(layer_activations.shape).astype(np.float32))
 
                 v_delta = 0.001*v_unflattened
 
@@ -111,11 +124,24 @@ if __name__ == "__main__":
                 else:
                     neg_s_count += 1
 
+            # TCAV score for one of the concept vectors
             TCAV_score = pos_s_count / (pos_s_count + neg_s_count)
 
+            # Add the TCAV score for this concept vector to a list for the current layer
             TCAV_scores_layer.append(TCAV_score)
 
+        # Get the average TCAV score for this layer and append it to a list of TCAV scores for all layers
         TCAV_layer_averages.append(
             sum(TCAV_scores_layer) / len(TCAV_scores_layer))
 
-    print(TCAV_layer_averages)
+    return TCAV_layer_averages
+
+
+if __name__ == "__main__":
+
+    model = load_model()
+
+    TCAV_scores = get_TCAV_layer_scores(
+        model, num_of_layers=6, concept_images_path=ORANGE_PATH)
+
+    print(TCAV_scores)

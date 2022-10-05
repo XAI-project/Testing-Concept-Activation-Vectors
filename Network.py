@@ -29,6 +29,9 @@ class Network(nn.Module):
         self.output6 = None
 
     def forward(self, input, layer=0):
+        """
+        Normal forward with the possibility of starting at a given layer.
+        """
         # image dim: 3 x 32 x 32
         output = input
         if layer <= 0:
@@ -55,6 +58,9 @@ class Network(nn.Module):
         return output
 
     def forward_and_save_layers(self, input):
+        """
+        Forward and cache layer activations.
+        """
         # image dim: 3 x 32 x 32
 
         output1 = F.relu(self.bn1(self.conv1(input)))
@@ -86,6 +92,9 @@ class Network(nn.Module):
         return output
 
     def get_layer_activations(self, layer):
+        """
+        Return the cached layer activations for a given layer.
+        """
         if layer == 1:
             return self.output1
         if layer == 2:
