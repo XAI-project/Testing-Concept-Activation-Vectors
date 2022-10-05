@@ -9,20 +9,29 @@ from Network import Network
 
 
 def save_model(model, path=MODEL_PATH):
-    """Save the model to a specified file"""
+    """
+    Save pytorch model to a specified file
+    """
     torch.save(model, path)
 
 
 def load_model(path=MODEL_PATH):
+    """
+    Load a pytorch model.
+    """
     model = torch.load(path)
     model.eval()
     return model
 
 
 def get_and_rescale_img(file, path):
+    """
+    Extracts an image, rescales to 32x32 and returns a tensor of the image.
+    """
     filename = os.fsdecode(file)
     img = Image.open(path + '/' + filename)
-    resize = torchvision.transforms.Resize([32, 32])
+    resize = torchvision.transforms.Resize(
+        [32, 32])  # Rescales any image size to 32 x 32
     img = resize(img)
     to_tensor = torchvision.transforms.ToTensor()
     tensor = to_tensor(img)
@@ -30,6 +39,9 @@ def get_and_rescale_img(file, path):
 
 
 def create_image_label_data(path, label=0):
+    """
+    Extracts and rescales images from a path, and returns a list of (image_tensor, image_label) pairs.
+    """
     directory_path = os.fsencode(path)
     image_label_data = []
     for file in os.listdir(directory_path):
@@ -38,9 +50,8 @@ def create_image_label_data(path, label=0):
     return image_label_data
 
 
-def load_ball_images(batch_size):
-    classes = ['basketball', 'baseball', 'bowling ball', 'football', 'eyeballs',
-               'marble', 'tennis ball', 'golf ball', 'screwballs', 'meat ball']
+def load_ball_images(batch_size, classes):
+
     image_and_label_training = []
     image_and_label_testing = []
     for i, image_type in enumerate(classes):
