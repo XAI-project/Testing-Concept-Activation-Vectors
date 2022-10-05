@@ -92,13 +92,13 @@ def get_TCAV_layer_scores(model, num_of_layers, concept_images_path, num_of_conc
         for concept_vector in concept_vector_list:
             # All concept vectors are created the same way but differ due to inherent randomness by having many dimensions.
 
-            directory_path = os.fsencode(BASKETBALL_TRAIN_PATH)
+            directory_path = os.fsencode(RANDOM_IMAGES_PATH)
 
             pos_s_count = 0
             neg_s_count = 0
 
             for file in os.listdir(directory_path):
-                tensor = get_and_rescale_img(file, BASKETBALL_TRAIN_PATH)
+                tensor = get_and_rescale_img(file, RANDOM_IMAGES_PATH)
                 image_label_data = [((tensor, torch.tensor(0)))]
                 batch = generate_batches_from_list(
                     1, image_label_data)  # To have the correct dimensions
@@ -112,7 +112,7 @@ def get_TCAV_layer_scores(model, num_of_layers, concept_images_path, num_of_conc
                 v_unflattened = torch.tensor(
                     concept_vector.reshape(layer_activations.shape).astype(np.float32))
 
-                v_delta = 0.001*v_unflattened
+                v_delta = 0.0001*v_unflattened
 
                 changed_layer_activations = layer_activations + v_delta
 

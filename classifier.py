@@ -9,14 +9,14 @@ from Network import Network
 
 
 class Classifier():
-    def __init__(self, lr, weight_decay, batch_size):
+    def __init__(self, lr, weight_decay, batch_size, num_of_classes):
         """
         Init classifier that uses CrossEntropyLoss, Adam and the Network in Network.py
         """
         # self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # TODO
         self.device = torch.device("cpu")
 
-        self.network = Network().to(self.device)
+        self.network = Network(num_of_classes).to(self.device)
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = Adam(self.network.parameters(),
                               lr=lr, weight_decay=weight_decay)
@@ -53,8 +53,7 @@ class Classifier():
                 self.optimizer.step()
 
             accuracy = self.test_accuracy()
-            print('For epoch', epoch,
-                  'the test accuracy over the whole test set is %d %%' % (accuracy))
+            print('Epoch: ' + str(epoch) + ', accuracy: %d %%' % (accuracy))
 
     def test_accuracy(self):
         """
@@ -80,13 +79,16 @@ class Classifier():
 
 if __name__ == "__main__":
 
-    classes = ['basketball', 'baseball', 'bowling ball', 'football', 'eyeballs',
-               'marble', 'tennis ball', 'golf ball', 'screwballs', 'meat ball']
+    classes = ['basketball', 'bowling ball', 'brass',
+               'soccer ball', 'volley ball', 'water polo ball',
+               #'bowling ball', 'golf ball'
+               ]
 
-    classifier = Classifier(lr=0.00003, weight_decay=0.005, batch_size=10)
+    classifier = Classifier(lr=0.00002, weight_decay=0.003,
+                            batch_size=10, num_of_classes=len(classes))
     classifier.load_train_test_data(classes)
 
-    classifier.train(num_epochs=15)
+    classifier.train(num_epochs=100)
     print('Finished Training')
 
     save_model(classifier.network)

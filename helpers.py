@@ -55,6 +55,7 @@ def load_ball_images(batch_size, classes):
     image_and_label_training = []
     image_and_label_testing = []
     for i, image_type in enumerate(classes):
+        print(i, image_type)
         image_and_label_training += create_image_label_data(
             BALLS_TRAIN_PATH + "/" + image_type, i)
         image_and_label_testing += create_image_label_data(

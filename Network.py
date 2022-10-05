@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 
 class Network(nn.Module):
-    def __init__(self):
+    def __init__(self, num_of_classes):
         super(Network, self).__init__()
         self.conv1 = nn.Conv2d(
             in_channels=3, out_channels=12, kernel_size=5, stride=1, padding=1)
@@ -18,7 +18,7 @@ class Network(nn.Module):
         self.conv5 = nn.Conv2d(
             in_channels=24, out_channels=48, kernel_size=5, stride=1, padding=1)
         self.bn5 = nn.BatchNorm2d(48)
-        self.fc1 = nn.Linear(48*10*10, 10)
+        self.fc1 = nn.Linear(48*10*10, num_of_classes)
 
         # Caching layer activations
         self.output1 = None
@@ -36,22 +36,29 @@ class Network(nn.Module):
         output = input
         if layer <= 0:
             output = F.relu(self.bn1(self.conv1(output)))
+            # print(output.shape)
         # image dim: 12 x 30 x 30
         if layer <= 1:
             output = F.relu(self.bn2(self.conv2(output)))
+            # print(output.shape)
         # image dim: 12 x 28 x 28
         if layer <= 2:
             output = self.pool(output)
+            # print(output.shape)
         # image dim: 12 x 14 x 14
         if layer <= 3:
             output = F.relu(self.bn4(self.conv4(output)))
+            # print(output.shape)
         # image dim: 24 x 12 x 12
         if layer <= 4:
             output = F.relu(self.bn5(self.conv5(output)))
+            # print(output.shape)
         # image dim: 48 x 10 x 10
         if layer <= 5:
             output = output.view(-1, 48*10*10)
+            # print(output.shape)
         # image dim: 4800
+        # print(output.shape)
         output = self.fc1(output)
         # image dim: 10 (number of possible labels)
 
