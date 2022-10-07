@@ -3,13 +3,23 @@ import random
 
 
 def circle(output_path, fill=False):
-    image = Image.new("RGB", (600, 600), "white")
+
+    img_size = 600
+
+    back_color = (random.randint(0, 255), random.randint(
+        0, 255), random.randint(0, 255))
+
+    image = Image.new("RGB", (img_size, img_size), back_color)
     draw = ImageDraw.Draw(image)
-    size_dif = random.randint(100, 300)
-    x0 = random.randint(0, 200)
+
+    size_dif = random.randint(100, 400)
+
+    x0 = random.randint(0, img_size - size_dif)
+    y0 = random.randint(0, img_size - size_dif)
+
     x1 = x0 + size_dif
-    y0 = random.randint(0, 200)
     y1 = y0 + size_dif
+
     color = (random.randint(0, 255), random.randint(
         0, 255), random.randint(0, 255))
     if fill:
