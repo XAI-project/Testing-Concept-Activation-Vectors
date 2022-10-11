@@ -15,18 +15,18 @@ def get_all_layer_activations(model, images, num_of_layers):
     """
     Get activations in each layer for all images
     """
-    activations = []
+    activations = np.empty((6, 0))
 
-    for layer in range(1, num_of_layers+1):
-        img_activations = []
-        for (image, _) in images:
-            # TODO: not necessary to run model.forward_and_save_layers once for each layer. Should be done once for each image.
-            model.forward_and_save_layers(image)
-            img_activations.append(torch.flatten(
-                model.get_layer_activations(layer)).tolist())
+    for (image, _) in images:
 
-        activations.append(img_activations)
-    return activations  # Shape: (# of layers, # of images)
+        model.forward_and_save_layers(image)
+
+        img_activations = [torch.flatten(
+            model.get_layer_activations(layer)).tolist() for layer in range(1, num_of_layers+1)]
+
+        activations = np.c_[activations, img_activations]
+
+    return activations.tolist()  # Shape: (# of layers, # of images)
 
 
 def prepare_concept_activations(model, num_of_layers, concept_images_path):
@@ -92,13 +92,13 @@ def get_TCAV_layer_scores(model, num_of_layers, concept_images_path, num_of_conc
         for concept_vector in concept_vector_list:
             # All concept vectors are created the same way but differ due to inherent randomness by having many dimensions.
 
-            directory_path = os.fsencode(RANDOM_IMAGES_PATH)
+            directory_path = os.fsencode(BASKETBALL_TRAIN_PATH)
 
             pos_s_count = 0
             neg_s_count = 0
 
             for file in os.listdir(directory_path):
-                tensor = get_and_rescale_img(file, RANDOM_IMAGES_PATH)
+                tensor = get_and_rescale_img(file, BASKETBALL_TRAIN_PATH)
                 image_label_data = [((tensor, torch.tensor(0)))]
                 batch = generate_batches_from_list(
                     1, image_label_data)  # To have the correct dimensions
