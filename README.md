@@ -13,3 +13,4 @@
   - random (Download this dataset and rename the folder to "random": https://www.kaggle.com/datasets/lprdosmil/unsplash-random-images-collection)
   - circles (Run draw_shapes.py)
   - circles_filled (Run draw_shapes.py)
+  - parquet (this folder is already populated)
