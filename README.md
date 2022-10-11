@@ -9,7 +9,8 @@
     - valid
     - balls.csv
     - class_dict.csv
-  - colors (Download this dataset and rename the folder to "colors": https://www.kaggle.com/datasets/adikurniawan/color-dataset-for-color-recognition)
+  - colors (Download this dataset, rename the folder to "colors" and convert to jpg: https://www.kaggle.com/datasets/adikurniawan/color-dataset-for-color-recognition)
   - random (Download this dataset and rename the folder to "random": https://www.kaggle.com/datasets/lprdosmil/unsplash-random-images-collection)
   - circles (Run draw_shapes.py)
   - circles_filled (Run draw_shapes.py)
+  - parquet (this folder is already populated)
