@@ -15,6 +15,7 @@ class Classifier():
         """
         # self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # TODO
         self.device = torch.device("cpu")
+        self.num_of_classes = num_of_classes
 
         self.network = Network(num_of_classes).to(self.device)
         self.loss_fn = nn.CrossEntropyLoss()
@@ -26,15 +27,16 @@ class Classifier():
         self.train_data = None
         self.test_data = None
 
-    def load_train_test_data(self, classes):
+    def load_train_test_data(self, classes, data_path):
         """
         Load train and test data from the ball images from the provided classes.
         """
-        train_data, test_data = load_ball_images(self.batch_size, classes)
+        train_data, test_data = load_train_test_images(
+            self.batch_size, classes, data_path)
         self.train_data = train_data
         self.test_data = test_data
 
-    def train(self, num_epochs):
+    def train(self, num_epochs, print_progress=True):
         """
         Train the model with the train_data for num_epochs epochs.
         """
@@ -53,7 +55,11 @@ class Classifier():
                 self.optimizer.step()
 
             accuracy = self.test_accuracy()
-            print('Epoch: ' + str(epoch) + ', accuracy: %d %%' % (accuracy))
+
+            if print_progress:
+                print('Epoch: ' + str(epoch) + ', accuracy: %d %%' % (accuracy))
+
+        return accuracy
 
     def test_accuracy(self):
         """
@@ -79,14 +85,13 @@ class Classifier():
 
 if __name__ == "__main__":
 
-    classes = ['basketball', 'bowling ball', 'brass',
-               'soccer ball', 'volley ball', 'water polo ball',
-               #'bowling ball', 'golf ball'
-               ]
+    DATA_PATH = BALLS_PATH
+
+    classes = BALLS_CLASSES
 
     classifier = Classifier(lr=0.00002, weight_decay=0.003,
                             batch_size=10, num_of_classes=len(classes))
-    classifier.load_train_test_data(classes)
+    classifier.load_train_test_data(classes, DATA_PATH)
 
     classifier.train(num_epochs=100)
     print('Finished Training')
