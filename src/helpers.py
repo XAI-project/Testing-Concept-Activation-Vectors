@@ -1,7 +1,9 @@
+import enum
+from matplotlib.pyplot import draw
 from CONSTS import *
 import torch
 import torchvision
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import os
 import random
 
@@ -95,3 +97,44 @@ def generate_batches_from_list(batch_size, tensor_list):
         except:
             continue
     return data
+
+
+def generate_image_with_texts(percent_random=0):
+    os.mkdir("." + DATA_PATH + "/textimages")
+    for typefolder in os.listdir("." + BALLS_PATH):
+        os.mkdir("." + DATA_PATH + "/textimages/" + typefolder)
+        for sport in os.listdir("." + BALLS_PATH + "/" + typefolder):
+            os.mkdir("." + DATA_PATH + "/textimages/" + typefolder + "/" + sport)
+            for i, img in enumerate(
+                os.listdir("." + BALLS_PATH + "/" + typefolder + "/" + sport)
+            ):
+                draw_and_save_copy(
+                    imgpath="."
+                    + BALLS_PATH
+                    + "/"
+                    + typefolder
+                    + "/"
+                    + sport
+                    + "/"
+                    + img,
+                    savepath="."
+                    + DATA_PATH
+                    + "/textimages/"
+                    + typefolder
+                    + "/"
+                    + sport,
+                    text=sport,
+                    name=str(i),
+                )
+
+
+def draw_and_save_copy(imgpath, savepath, text, name):
+    image = Image.open(imgpath)
+    copy = image.copy()
+    draw_image = ImageDraw.Draw(copy)
+    draw_image.text((50, 50), text, fill="white")
+    copy.save(os.path.abspath(savepath) + "/" + name + ".jpg")
+
+
+if __name__ == "__main__":
+    generate_image_with_texts()
