@@ -1,11 +1,23 @@
-from CONSTS import *
 import torch
 import torchvision
 from PIL import Image
 import os
 import random
+import splitfolders
 
-from Network import Network
+from src.CONSTS import *
+
+
+def split_folder(input_folder, output_folder, ratio=(0.8, 0.1, 0.1)):
+    """Split with a ratio"""
+    splitfolders.ratio(
+        input=input_folder,
+        output=output_folder,
+        seed=1337,
+        ratio=ratio,
+        group_prefix=None,
+        move=False,
+    )  # default values
 
 
 def save_model(model, path=MODEL_PATH):

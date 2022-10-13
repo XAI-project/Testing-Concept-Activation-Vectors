@@ -3,13 +3,13 @@ from torch.optim import Adam
 import torch.nn as nn
 from torch.autograd import Variable
 
-from CONSTS import *
-from helpers import *
-from Network import Network
+from src.CONSTS import *
+from src.helpers import *
+from src.Network import Network
 
 
-class Classifier():
-    def __init__(self, lr, weight_decay, batch_size, num_of_classes):
+class Classifier:
+    def __init__(self, batch_size, num_of_classes):
         """
         Init classifier that uses CrossEntropyLoss, Adam and the Network in Network.py
         """
@@ -19,20 +19,25 @@ class Classifier():
 
         self.network = Network(num_of_classes).to(self.device)
         self.loss_fn = nn.CrossEntropyLoss()
-        self.optimizer = Adam(self.network.parameters(),
-                              lr=lr, weight_decay=weight_decay)
+        self.optimizer = None
 
         self.batch_size = batch_size
 
         self.train_data = None
         self.test_data = None
 
+    def set_optim(self, lr, weight_decay):
+        self.optimizer = Adam(
+            self.network.parameters(), lr=lr, weight_decay=weight_decay
+        )
+
     def load_train_test_data(self, classes, data_path):
         """
         Load train and test data from the ball images from the provided classes.
         """
         train_data, test_data = load_train_test_images(
-            self.batch_size, classes, data_path)
+            self.batch_size, classes, data_path
+        )
         self.train_data = train_data
         self.test_data = test_data
 
@@ -57,7 +62,7 @@ class Classifier():
             accuracy = self.test_accuracy()
 
             if print_progress:
-                print('Epoch: ' + str(epoch) + ', accuracy: %d %%' % (accuracy))
+                print("Epoch: " + str(epoch) + ", accuracy: %d %%" % (accuracy))
 
         return accuracy
 
@@ -79,7 +84,7 @@ class Classifier():
                 total += labels.size(0)
                 accuracy += (predicted == labels).sum().item()
 
-        accuracy = (100 * accuracy / total)
+        accuracy = 100 * accuracy / total
         return accuracy
 
 
@@ -89,11 +94,11 @@ if __name__ == "__main__":
 
     classes = BALLS_CLASSES
 
-    classifier = Classifier(lr=0.00002, weight_decay=0.003,
-                            batch_size=10, num_of_classes=len(classes))
+    classifier = Classifier(batch_size=10, num_of_classes=len(classes))
+    classifier.set_optim(lr=0.00002, weight_decay=0.003)
     classifier.load_train_test_data(classes, DATA_PATH)
 
     classifier.train(num_epochs=100)
-    print('Finished Training')
+    print("Finished Training")
 
     save_model(classifier.network)

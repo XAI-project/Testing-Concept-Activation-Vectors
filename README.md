@@ -14,3 +14,4 @@
   - circles (Run draw_shapes.py)
   - circles_filled (Run draw_shapes.py)
   - parquet (this folder is already populated)
+  - weather (Download this dataset and rename the folder to "weather": https://www.kaggle.com/datasets/jehanbhathena/weather-dataset)

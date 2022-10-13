@@ -6,19 +6,23 @@ class Network(nn.Module):
     def __init__(self, num_of_classes):
         super(Network, self).__init__()
         self.conv1 = nn.Conv2d(
-            in_channels=3, out_channels=12, kernel_size=5, stride=1, padding=1)
+            in_channels=3, out_channels=12, kernel_size=5, stride=1, padding=1
+        )
         self.bn1 = nn.BatchNorm2d(12)
         self.conv2 = nn.Conv2d(
-            in_channels=12, out_channels=12, kernel_size=5, stride=1, padding=1)
+            in_channels=12, out_channels=12, kernel_size=5, stride=1, padding=1
+        )
         self.bn2 = nn.BatchNorm2d(12)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv4 = nn.Conv2d(
-            in_channels=12, out_channels=24, kernel_size=5, stride=1, padding=1)
+            in_channels=12, out_channels=24, kernel_size=5, stride=1, padding=1
+        )
         self.bn4 = nn.BatchNorm2d(24)
         self.conv5 = nn.Conv2d(
-            in_channels=24, out_channels=48, kernel_size=5, stride=1, padding=1)
+            in_channels=24, out_channels=48, kernel_size=5, stride=1, padding=1
+        )
         self.bn5 = nn.BatchNorm2d(48)
-        self.fc1 = nn.Linear(48*10*10, num_of_classes)
+        self.fc1 = nn.Linear(48 * 10 * 10, num_of_classes)
 
         # Caching layer activations
         self.output1 = None
@@ -26,7 +30,6 @@ class Network(nn.Module):
         self.output3 = None
         self.output4 = None
         self.output5 = None
-        self.output6 = None
 
     def forward(self, input, layer=0):
         """
@@ -55,7 +58,7 @@ class Network(nn.Module):
             # print(output.shape)
         # image dim: 48 x 10 x 10
         if layer <= 5:
-            output = output.view(-1, 48*10*10)
+            output = output.view(-1, 48 * 10 * 10)
             # print(output.shape)
         # image dim: 4800
         # print(output.shape)
@@ -85,9 +88,9 @@ class Network(nn.Module):
         self.output5 = F.relu(self.bn5(self.conv5(self.output4)))
         # image dim: 48 x 10 x 10
 
-        self.output6 = self.output5.view(-1, 48*10*10)
+        output6 = self.output5.view(-1, 48 * 10 * 10)
         # image dim: 4800
-        output = self.fc1(self.output6)
+        output = self.fc1(output6)
         # image dim: (number of possible labels)
 
         return output
@@ -106,5 +109,3 @@ class Network(nn.Module):
             return self.output4
         if layer == 5:
             return self.output5
-        if layer == 6:
-            return self.output6

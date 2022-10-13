@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from CONSTS import *
-from helpers import *
+from src.CONSTS import *
+from src.helpers import *
 
 import warnings
 
@@ -16,7 +16,7 @@ def get_all_layer_activations(model, images, num_of_layers):
     """
     Get activations in each layer for all images
     """
-    activations = np.empty((6, 0))
+    activations = np.empty((num_of_layers, 0))
 
     for (image, _) in images:
 
@@ -158,12 +158,11 @@ def get_layer_TCAV_scores(
 
 def get_layer_cluster_scores(
     layer,
-    num_of_concept_vectors,
-    num_of_images,
     layer_concept_images_activations,
     data_path,
     main_class_name,
     class_index,
+    model,
 ):
     centroid = np.array(layer_concept_images_activations).mean(axis=0)
 
@@ -175,48 +174,55 @@ def get_layer_cluster_scores(
     neg_s_count = 0
 
     for file in os.listdir(directory_path):
-        tensor = get_and_rescale_img(file, data_train_path)
-        image_label_data = [((tensor, torch.tensor(0)))]
-        batch = generate_batches_from_list(
-            1, image_label_data
-        )  # To have the correct dimensions
+        try:
+            tensor = get_and_rescale_img(file, data_train_path)
+            image_label_data = [((tensor, torch.tensor(0)))]
+            batch = generate_batches_from_list(
+                1, image_label_data
+            )  # To have the correct dimensions
 
-        image = batch[0][0]
+            image = batch[0][0]
 
-        model.forward_and_save_layers(image)  # TODO: fix.
+            model.forward_and_save_layers(image)  # TODO: fix.
 
-        orig_layer_activation = model.get_layer_activations(layer)
-        activations_shape = orig_layer_activation.shape
-        layer_activation = orig_layer_activation.flatten().detach().numpy()
+            orig_layer_activation = model.get_layer_activations(layer)
+            activations_shape = orig_layer_activation.shape
+            layer_activation = orig_layer_activation.flatten().detach().numpy()
 
-        vector_img_to_centroid = centroid - layer_activation
+            vector_img_to_centroid = centroid - layer_activation
 
-        normalized_vector_img_to_centroid = vector_img_to_centroid / np.linalg.norm(
-            vector_img_to_centroid
-        )
+            normalized_vector_img_to_centroid = vector_img_to_centroid / np.linalg.norm(
+                vector_img_to_centroid
+            )
 
-        altered_layer_activations = layer_activation + normalized_vector_img_to_centroid
+            altered_layer_activations = (
+                layer_activation + normalized_vector_img_to_centroid
+            )
 
-        sensitivity = (
-            model.forward(
-                torch.tensor(altered_layer_activations, dtype=torch.float).reshape(
-                    activations_shape
-                ),
-                layer=layer,
-            )[0][class_index]
-            - model.forward(
-                torch.tensor(layer_activation, dtype=torch.float).reshape(
-                    activations_shape
-                ),
-                layer=layer,
-            )[0][class_index]
-        )
+            sensitivity = (
+                model.forward(
+                    torch.tensor(altered_layer_activations, dtype=torch.float).reshape(
+                        activations_shape
+                    ),
+                    layer=layer,
+                )[0][class_index]
+                - model.forward(
+                    torch.tensor(layer_activation, dtype=torch.float).reshape(
+                        activations_shape
+                    ),
+                    layer=layer,
+                )[0][class_index]
+            )
 
-        if sensitivity > 0:
-            pos_s_count += 1
-        else:
-            neg_s_count += 1
+            if sensitivity > 0:
+                pos_s_count += 1
+            else:
+                neg_s_count += 1
+        except:
+            continue
 
+    if pos_s_count + neg_s_count < 50:
+        print("very few test images when calculating sensitivity")
     # cluster sensitivity score for the concept centroid
     cluster_sensitivity_score = pos_s_count / (pos_s_count + neg_s_count)
 
@@ -269,12 +275,11 @@ def get_concept_significance_scores(
             significance_scores.append(
                 get_layer_cluster_scores(
                     layer,
-                    num_of_concept_vectors,
-                    num_of_images,
                     layer_concept_images_activations,
                     data_path,
                     main_class_name,
                     class_index,
+                    model,
                 )
             )
         else:
@@ -297,7 +302,7 @@ if __name__ == "__main__":
 
     significance_scores = get_concept_significance_scores(
         model,
-        num_of_layers=6,
+        num_of_layers=5,
         concept_images_path=concept_data_path,
         data_path=image_data_path,
         main_class_name=classes[0],

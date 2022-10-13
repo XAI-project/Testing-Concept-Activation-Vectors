@@ -1,5 +1,7 @@
 DATA_PATH = "./data"
 
+GRAPH_PATH = DATA_PATH + "/graphs"
+
 BALLS_PATH = DATA_PATH + "/balls"
 BALLS_TRAIN_PATH = BALLS_PATH + "/train"
 BALLS_TEST_PATH = BALLS_PATH + "/test"
@@ -32,7 +34,8 @@ BALLS_CLASSES = [
     "soccer ball",
     "volley ball",
     "water polo ball",
-    #'bowling ball', 'golf ball'
+    "bowling ball",
+    "golf ball",
 ]
 
 WEATHER_CLASSES = ["snow", "sandstorm", "dew", "lightning", "rainbow"]

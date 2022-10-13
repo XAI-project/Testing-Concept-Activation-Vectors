@@ -1,14 +1,15 @@
-from src.TCAV import get_concept_significance_scores
+from src.significance_scores import get_concept_significance_scores
 from src.classifier import Classifier
 from src.helpers import *
+from src.plotting import line_graph
+from src.CONSTS import *
 
 
-if __name__ == "__main__":
-
-    IMAGE_DATA_PATH = WEATHER_PATH
+def main():
+    image_data_path = WEATHER_PATH
 
     # The main class must be the first in this list:
-    classes = ["snow", "sandstorm", "dew", "lightning", "rainbow"]
+    classes = WEATHER_CLASSES
 
     model_scores = []
 
@@ -16,35 +17,63 @@ if __name__ == "__main__":
     concept_data_paths = [
         RANDOM_2_IMAGES_PATH,
         ORANGE_PATH,
+        COLORS_PATH + "brown",
+        COLORS_PATH + "violet",
         CIRCLES_IMAGES_PATH,
         CIRCLES_FILLED_IMAGES_PATH,
         PARQUET_IMAGES_PATH,
     ]
 
+    significance_type = "cluster"
+
     for concept_data_path in concept_data_paths:
 
-        print(concept_data_path)
+        print("Concept:", concept_data_path)
 
-        for i in range(3):
+        accuracies = []
 
-            classifier = Classifier(
-                lr=0.00002,
-                weight_decay=0.003,
-                batch_size=10,
-                num_of_classes=len(classes),
-            )
-            classifier.load_train_test_data(classes, IMAGE_DATA_PATH)
+        for i in range(7):
 
-            acc = classifier.train(num_epochs=25, print_progress=False)
+            classifier = Classifier(batch_size=10, num_of_classes=len(classes))
+            classifier.set_optim(lr=0.00002, weight_decay=0.003)
+            classifier.load_train_test_data(classes, image_data_path)
+
+            acc = classifier.train(num_epochs=20, print_progress=True)
 
             significance_scores = get_concept_significance_scores(
                 classifier.network,
-                num_of_layers=6,
+                num_of_layers=5,
                 concept_images_path=concept_data_path,
-                data_path=IMAGE_DATA_PATH,
+                data_path=image_data_path,
                 main_class_name=classes[0],
-                num_of_concept_vectors=50,
+                significance_type=significance_type,
             )
 
-            model_scores.append([acc, significance_scores])
-            print(acc, significance_scores)
+            model_scores.append(significance_scores)
+            print("acc:", acc, "; scores:", significance_scores)
+
+            accuracies.append(acc)
+
+        avg_acc = sum(accuracies) / len(accuracies)
+
+        file_name = (
+            image_data_path.split("/")[-1]
+            + "_"
+            + significance_type
+            + "_"
+            + concept_data_path.split("/")[-1].split(".")[0]
+        )
+        title = file_name + " (acg acc: " + str(avg_acc) + ")"
+        save_path = GRAPH_PATH + "/" + file_name
+        line_graph(
+            model_scores,
+            range(1, 6),
+            title,
+            xlabel=significance_type + " score",
+            save_path=save_path,
+        )
+
+
+if __name__ == "__main__":
+
+    main()
