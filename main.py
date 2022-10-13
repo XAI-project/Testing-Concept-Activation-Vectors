@@ -13,6 +13,7 @@ if __name__ == "__main__":
 
     model_scores = []
 
+    # Iterate these paths 
     concept_data_paths = [RANDOM_2_IMAGES_PATH, ORANGE_PATH,
                           CIRCLES_IMAGES_PATH, CIRCLES_FILLED_IMAGES_PATH, PARQUET_IMAGES_PATH]
 
