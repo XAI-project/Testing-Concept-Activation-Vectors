@@ -50,18 +50,18 @@ def create_image_label_data(path, label=0):
     return image_label_data
 
 
-def load_ball_images(batch_size, classes):
+def load_train_test_images(batch_size, classes, data_path):
 
     image_and_label_training = []
     image_and_label_testing = []
     for i, image_type in enumerate(classes):
-        print(i, image_type)
+        # print(i, image_type)
         image_and_label_training += create_image_label_data(
-            BALLS_TRAIN_PATH + "/" + image_type, i)
+            data_path + "/train/" + image_type, i)
         image_and_label_testing += create_image_label_data(
-            BALLS_TEST_PATH + "/" + image_type, i)
+            data_path + "/test/" + image_type, i)
         image_and_label_testing += create_image_label_data(
-            BALLS_VALID_PATH + "/" + image_type, i)  # We don't validate atm, so adding for more accurate accuracy
+            data_path + "/valid/" + image_type, i)  # We don't validate atm, so adding for more accurate accuracy
 
     random.shuffle(image_and_label_training)
     random.shuffle(image_and_label_testing)

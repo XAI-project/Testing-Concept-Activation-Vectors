@@ -15,18 +15,18 @@ def get_all_layer_activations(model, images, num_of_layers):
     """
     Get activations in each layer for all images
     """
-    activations = []
+    activations = np.empty((6, 0))
 
-    for layer in range(1, num_of_layers+1):
-        img_activations = []
-        for (image, _) in images:
-            # TODO: not necessary to run model.forward_and_save_layers once for each layer. Should be done once for each image.
-            model.forward_and_save_layers(image)
-            img_activations.append(torch.flatten(
-                model.get_layer_activations(layer)).tolist())
+    for (image, _) in images:
 
-        activations.append(img_activations)
-    return activations  # Shape: (# of layers, # of images)
+        model.forward_and_save_layers(image)
+
+        img_activations = [torch.flatten(
+            model.get_layer_activations(layer)).tolist() for layer in range(1, num_of_layers+1)]
+
+        activations = np.c_[activations, img_activations]
+
+    return activations.tolist()  # Shape: (# of layers, # of images)
 
 
 def prepare_concept_activations(model, num_of_layers, concept_images_path):
@@ -59,7 +59,7 @@ def create_svm_classifier(concept_images_activations, random_activations):
     return clf
 
 
-def get_TCAV_layer_scores(model, num_of_layers, concept_images_path, num_of_concept_vectors=50):
+def get_TCAV_layer_scores(model, num_of_layers, concept_images_path, data_path, main_class_name, class_index=0, num_of_concept_vectors=20):
     """
     For each layer, create num_of_concept_vectors concept vectors and test all basketball images on each concept vector. 
     Get the ratio of times changing the basketball image activations with (basketball image activations + (tiny constant * concept vector)) 
@@ -90,39 +90,48 @@ def get_TCAV_layer_scores(model, num_of_layers, concept_images_path, num_of_conc
         TCAV_scores_layer = []
 
         for concept_vector in concept_vector_list:
+
             # All concept vectors are created the same way but differ due to inherent randomness by having many dimensions.
 
-            directory_path = os.fsencode(RANDOM_IMAGES_PATH)
+            data_train_path = data_path + "/train/" + main_class_name
+
+            directory_path = os.fsencode(data_train_path)
 
             pos_s_count = 0
             neg_s_count = 0
 
             for file in os.listdir(directory_path):
-                tensor = get_and_rescale_img(file, RANDOM_IMAGES_PATH)
-                image_label_data = [((tensor, torch.tensor(0)))]
-                batch = generate_batches_from_list(
-                    1, image_label_data)  # To have the correct dimensions
+                if (pos_s_count + neg_s_count) > 100:
+                    break
+                try:  # TODO: fix errors
+                    tensor = get_and_rescale_img(file, data_train_path)
+                    image_label_data = [((tensor, torch.tensor(0)))]
+                    batch = generate_batches_from_list(
+                        1, image_label_data)  # To have the correct dimensions
 
-                image = batch[0][0]
+                    image = batch[0][0]
 
-                model.forward_and_save_layers(image)
-                layer_activations = model.get_layer_activations(
-                    layer)  # TODO: same as in get_all_layer_activations
+                    output = model.forward_and_save_layers(image)
 
-                v_unflattened = torch.tensor(
-                    concept_vector.reshape(layer_activations.shape).astype(np.float32))
+                    label = torch.zeros((1, output.shape[1]))
+                    label[0][class_index] = 1  # Class of interest
 
-                v_delta = 0.0001*v_unflattened
+                    loss = torch.nn.CrossEntropyLoss()(output, label)
 
-                changed_layer_activations = layer_activations + v_delta
+                    # Computing activation gradients for a layer
+                    layer_activation_grads = torch.autograd.grad(
+                        loss, model.get_layer_activations(layer), create_graph=False, only_inputs=True)[0]
 
-                sensitivity = model(
-                    changed_layer_activations, layer=layer)[0][0] - model(layer_activations, layer=layer)[0][0]
+                    sensitivity = - \
+                        np.dot(layer_activation_grads.flatten(
+                        ).detach().numpy(), concept_vector)
 
-                if sensitivity > 0:
-                    pos_s_count += 1
-                else:
-                    neg_s_count += 1
+                    if sensitivity > 0:
+                        pos_s_count += 1
+                    else:
+                        neg_s_count += 1
+                except:
+                    continue
 
             # TCAV score for one of the concept vectors
             TCAV_score = pos_s_count / (pos_s_count + neg_s_count)
@@ -141,7 +150,10 @@ if __name__ == "__main__":
 
     model = load_model()
 
-    TCAV_scores = get_TCAV_layer_scores(
-        model, num_of_layers=6, concept_images_path=ORANGE_PATH)
+    concept_data = RANDOM_2_IMAGES_PATH
 
+    TCAV_scores = get_TCAV_layer_scores(
+        model, num_of_layers=6, concept_images_path=concept_data)
+
+    print(concept_data)
     print(TCAV_scores)
