@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 from src.CONSTS import DATA_PATH
 
@@ -19,7 +18,9 @@ def line_graph(
     plt.ylim(ylim)
     if save_path:
         plt.savefig(save_path)
-    plt.show()
+    plt.clf()
+    plt.cla()
+    # plt.show()
 
 
 if __name__ == "__main__":
