@@ -1,6 +1,6 @@
 from src.significance_scores import get_concept_significance_scores
-from src.classifier import Classifier
-from src.helpers import *
+from src.model.classifier import Classifier
+from src.utils import *
 from src.plotting import line_graph
 from src.CONSTS import *
 
@@ -32,10 +32,9 @@ def main():
 
             accuracies = []
 
-            for i in range(4):
+            for i in range(5):
 
-                classifier = Classifier(
-                    batch_size=10, num_of_classes=len(classes))
+                classifier = Classifier(batch_size=10, num_of_classes=len(classes))
                 classifier.set_optim(lr=0.00002, weight_decay=0.003)
                 classifier.load_train_test_data(classes, image_data_path)
 

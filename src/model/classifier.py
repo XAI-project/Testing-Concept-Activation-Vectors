@@ -4,8 +4,9 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 from src.CONSTS import *
-from src.helpers import *
-from src.Network import Network
+from src.model.Network import Network
+from src.model.helpers import *
+from src.utils import *
 
 
 class Classifier:
@@ -88,15 +89,11 @@ class Classifier:
         return accuracy
 
 
-if __name__ == "__main__":
-
-    DATA_PATH = BALLS_PATH
-
-    classes = BALLS_CLASSES
+def create_classification_model(IMG_DATA_PATH=BALLS_PATH, classes=BALLS_CLASSES):
 
     classifier = Classifier(batch_size=10, num_of_classes=len(classes))
     classifier.set_optim(lr=0.00002, weight_decay=0.003)
-    classifier.load_train_test_data(classes, DATA_PATH)
+    classifier.load_train_test_data(classes, IMG_DATA_PATH)
 
     classifier.train(num_epochs=100)
     print("Finished Training")

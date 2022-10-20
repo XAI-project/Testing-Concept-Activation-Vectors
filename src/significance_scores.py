@@ -3,9 +3,10 @@ from sklearn import svm
 import numpy as np
 import torch
 from tqdm import tqdm
+import os
 
 from src.CONSTS import *
-from src.helpers import *
+from src.utils import *
 
 import warnings
 
@@ -78,6 +79,7 @@ def generate_concept_vectors(
 
 
 def get_layer_TCAV_scores(
+    model,
     layer,
     num_of_concept_vectors,
     num_of_images,
@@ -259,6 +261,7 @@ def get_concept_significance_scores(
 
         if significance_type == "tcav":
             significance_scores_layer = get_layer_TCAV_scores(
+                model,
                 layer,
                 num_of_concept_vectors,
                 num_of_images,
@@ -287,28 +290,6 @@ def get_concept_significance_scores(
 
         # Get the average TCAV score for this layer and append it to a list of TCAV scores for all layers
 
-    return significance_scores
-
-
-if __name__ == "__main__":
-
-    model = load_model()
-
-    image_data_path = BALLS_PATH
-    concept_data_path = COLORS_PATH + "/brown"
-
-    # The main class must be the first in this list:
-    classes = BALLS_CLASSES
-
-    significance_scores = get_concept_significance_scores(
-        model,
-        num_of_layers=5,
-        concept_images_path=concept_data_path,
-        data_path=image_data_path,
-        main_class_name=classes[0],
-        num_of_concept_vectors=50,
-        significance_type="cluster",
-    )
-
-    print(concept_data_path)
+    print(concept_images_path)
     print(significance_scores)
+    return significance_scores
