@@ -35,8 +35,7 @@ BALLS_CLASSES = [
     "brass",
     "soccer ball",
     "volley ball",
-    "water polo ball",
-    # "bowling ball",
+    # "water polo ball",
     # "golf ball",
 ]
 

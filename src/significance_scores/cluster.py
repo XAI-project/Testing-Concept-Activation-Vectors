@@ -27,7 +27,7 @@ def get_cluster_significance_scores(
     significance_scores = []
 
     concept_images_activations = get_images_activations(
-        model, num_of_layers, concept_images_path, include_random=False
+        model, num_of_layers, concept_images_path
     )  # dim: num of layers x num of images ...
 
     for layer in tqdm(range(1, num_of_layers + 1)):
@@ -118,7 +118,7 @@ def calculate_class_cluster_proximity(
     Calculate the cluster centroid
     """
     concept_images_activations = get_images_activations(
-        model, num_of_layers, concept_images_path, include_random=False
+        model, num_of_layers, concept_images_path
     )
 
     differences = []
@@ -136,7 +136,7 @@ def calculate_class_cluster_proximity(
             class_images_path = data_path + "/train/" + class_
 
             class_images_activations = get_images_activations(
-                model, num_of_layers, class_images_path, include_random=False
+                model, num_of_layers, class_images_path
             )[layer - 1]
             class_images_activations_centroid = np.array(class_images_activations).mean(
                 axis=0

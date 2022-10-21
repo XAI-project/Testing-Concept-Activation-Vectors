@@ -1,7 +1,13 @@
 install.py
-data/balls/
-data/weather/
-data/random2/
+data/balls/train/
+data/weather/train/
+data/balls/test/
+data/weather/test/
+data/balls/valid/
+data/weather/valid/
+data/balls/class_random/
+data/weather/class_random/
+data/random2
 data/colors/
 data/random/
 data/circles/
