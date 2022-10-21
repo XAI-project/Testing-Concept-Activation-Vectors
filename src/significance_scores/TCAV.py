@@ -28,7 +28,7 @@ def get_TCAV_significance_scores(
 
     significance_scores = []
 
-    concept_images_activations, random_activations = prepare_concept_activations(
+    concept_images_activations, random_activations = get_images_activations(
         model, num_of_layers, concept_images_path
     )  # dim: num of layers x num of images ...
 
@@ -52,9 +52,9 @@ def get_TCAV_significance_scores(
 
             # All concept vectors are created the same way but differ due to inherent randomness by having many dimensions.
 
-            data_train_path = data_path + "/train/" + main_class_name
+            data_main_class_train_path = data_path + "/train/" + main_class_name
 
-            directory_path = os.fsencode(data_train_path)
+            directory_path = os.fsencode(data_main_class_train_path)
 
             pos_s_count = 0
             neg_s_count = 0
@@ -63,7 +63,7 @@ def get_TCAV_significance_scores(
                 if (pos_s_count + neg_s_count) > 100:
                     break
                 try:  # TODO: fix errors
-                    tensor = get_and_rescale_img(file, data_train_path)
+                    tensor = get_and_rescale_img(file, data_main_class_train_path)
                     image_label_data = [((tensor, torch.tensor(0)))]
                     batch = generate_batches_from_list(
                         1, image_label_data
@@ -111,6 +111,4 @@ def get_TCAV_significance_scores(
 
         # Get the average TCAV score for this layer and append it to a list of TCAV scores for all layers
 
-    print(concept_images_path)
-    print(significance_scores)
     return significance_scores

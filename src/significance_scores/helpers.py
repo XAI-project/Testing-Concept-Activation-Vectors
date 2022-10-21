@@ -13,15 +13,19 @@ def get_all_layer_activations(model, images, num_of_layers):
     activations = np.empty((num_of_layers, 0))
 
     for (image, _) in images:
+        try:
 
-        model.forward_and_save_layers(image)
+            model.forward_and_save_layers(image)
 
-        img_activations = [
-            torch.flatten(model.get_layer_activations(layer)).tolist()
-            for layer in range(1, num_of_layers + 1)
-        ]
+            img_activations = [
+                torch.flatten(model.get_layer_activations(layer)).tolist()
+                for layer in range(1, num_of_layers + 1)
+            ]
 
-        activations = np.c_[activations, img_activations]
+            activations = np.c_[activations, img_activations]
+
+        except:
+            continue
 
     return activations.tolist()  # Shape: (# of layers, # of images)
 
@@ -39,17 +43,13 @@ def generate_concept_vectors(
     return concept_vector_list
 
 
-def prepare_concept_activations(
-    model, num_of_layers, concept_images_path, include_random=True
-):
+def get_images_activations(model, num_of_layers, images_path, include_random=True):
     """
     Get activations for images belonging to a concept and random images.
     """
 
-    concept_images = load_images(concept_images_path)
-    concept_images_activations = get_all_layer_activations(
-        model, concept_images, num_of_layers
-    )
+    images = load_images(images_path)
+    images_activations = get_all_layer_activations(model, images, num_of_layers)
 
     if include_random:
 
@@ -58,9 +58,9 @@ def prepare_concept_activations(
             model, random_images, num_of_layers
         )
 
-        return concept_images_activations, random_activations
+        return images_activations, random_activations
 
-    return concept_images_activations
+    return images_activations
 
 
 def create_svm_classifier(concept_images_activations, random_activations):
