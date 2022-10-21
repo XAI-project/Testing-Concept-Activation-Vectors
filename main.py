@@ -20,17 +20,21 @@ def plot_significance_scores():
     # The main class must be the first in this list:
     classes = WEATHER_CLASSES
 
+    random_concept_path = WEATHER_PATH + "/class_random"
+    random_concept_path_small = random_concept_path + "2"
+
     # Iterate these paths
     concept_data_paths = [
-        RANDOM_2_IMAGES_PATH,
+        # RANDOM_2_IMAGES_PATH,
         ORANGE_PATH,
         COLORS_PATH + "/violet",
         COLORS_PATH + "/white",
         # CIRCLES_IMAGES_PATH,
         # PARQUET_IMAGES_PATH,
+        random_concept_path_small,
     ]
 
-    for significance_type in ["tcav", "cluster"]:
+    for significance_type in ["tcav"]:
 
         for concept_data_path in concept_data_paths:
 
@@ -55,6 +59,7 @@ def plot_significance_scores():
                         classifier.network,
                         num_of_layers=5,
                         concept_images_path=concept_data_path,
+                        random_concept_path=random_concept_path,
                         data_path=image_data_path,
                         main_class_name=classes[0],
                     )
@@ -95,19 +100,22 @@ def plot_significance_scores():
 
 def plot_cluster_concept_proximity():
 
-    image_data_path = WEATHER_PATH
+    image_data_path = BALLS_PATH
 
     # The main class must be the first in this list:
-    classes = WEATHER_CLASSES
+    classes = BALLS_CLASSES
+
+    random_concept_path_2 = BALLS_PATH + "/class_random2"
 
     # Iterate these paths
     concept_data_paths = [
-        RANDOM_2_IMAGES_PATH,
-        ORANGE_PATH,
-        COLORS_PATH + "/violet",
-        COLORS_PATH + "/white",
+        # RANDOM_2_IMAGES_PATH,
+        # ORANGE_PATH,
+        # COLORS_PATH + "/violet",
+        # COLORS_PATH + "/white",
         # CIRCLES_IMAGES_PATH,
         # PARQUET_IMAGES_PATH,
+        random_concept_path_2
     ]
 
     for concept_data_path in concept_data_paths:
@@ -177,4 +185,5 @@ def plot_cluster_concept_proximity():
 
 if __name__ == "__main__":
 
-    plot_cluster_concept_proximity()
+    # plot_cluster_concept_proximity()
+    plot_significance_scores()

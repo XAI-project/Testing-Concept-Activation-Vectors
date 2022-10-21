@@ -16,6 +16,7 @@ def get_TCAV_significance_scores(
     model,
     num_of_layers,
     concept_images_path,
+    random_concept_path,
     data_path,
     main_class_name,
     class_index=0,
@@ -28,8 +29,12 @@ def get_TCAV_significance_scores(
 
     significance_scores = []
 
-    concept_images_activations, random_activations = get_images_activations(
+    concept_images_activations = get_images_activations(
         model, num_of_layers, concept_images_path
+    )  # dim: num of layers x num of images ...
+
+    random_activations = get_images_activations(
+        model, num_of_layers, random_concept_path
     )  # dim: num of layers x num of images ...
 
     num_of_images = len(concept_images_activations[0])

@@ -51,6 +51,7 @@ def load_train_test_images(batch_size, classes, data_path):
 
     image_and_label_training = []
     image_and_label_testing = []
+    image_and_label_validation = []
     for i, image_type in enumerate(classes):
         # print(i, image_type)
         image_and_label_training += create_image_label_data(
@@ -59,14 +60,16 @@ def load_train_test_images(batch_size, classes, data_path):
         image_and_label_testing += create_image_label_data(
             data_path + "/test/" + image_type, i
         )
-        image_and_label_testing += create_image_label_data(
+        image_and_label_validation += create_image_label_data(
             data_path + "/valid/" + image_type, i
         )  # We don't validate atm, so adding for more accurate accuracy
 
     random.shuffle(image_and_label_training)
     random.shuffle(image_and_label_testing)
+    random.shuffle(image_and_label_validation)
     train_data = generate_batches_from_list(batch_size, image_and_label_training)
     test_data = generate_batches_from_list(batch_size, image_and_label_testing)
+    valid_data = generate_batches_from_list(batch_size, image_and_label_validation)
     return train_data, test_data
 
 

@@ -43,22 +43,13 @@ def generate_concept_vectors(
     return concept_vector_list
 
 
-def get_images_activations(model, num_of_layers, images_path, include_random=True):
+def get_images_activations(model, num_of_layers, images_path):
     """
-    Get activations for images belonging to a concept and random images.
+    Get activations for images in a provided path.
     """
 
     images = load_images(images_path)
     images_activations = get_all_layer_activations(model, images, num_of_layers)
-
-    if include_random:
-
-        random_images = load_images(RANDOM_IMAGES_PATH)
-        random_activations = get_all_layer_activations(
-            model, random_images, num_of_layers
-        )
-
-        return images_activations, random_activations
 
     return images_activations
 
